@@ -1,80 +1,89 @@
 package main
 
-import (
-	"fmt"
-	"net"
-	"os"
-	"strings"
-	"time"
+import(
+    "fmt"
+    "net"
+    "os"
+    "time"
+    "strings"
 )
 
-func checkError(err error, funcName string) {
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Fatal error:%s-----in func:%s", err.Error(), funcName)
-		os.Exit(1)
-	}
+type  Client struct{
+    conn *net.UDPConn
+    gkey bool   //用来判断用户退出
+    userID int
+    userName string
+    sendMessages chan string
+    receiveMessages chan string
+
 }
 
-type Client struct {
-	conn            *net.UDPConn
-	gkey            bool
-	userID          int
-	userName        string
-	sendMessages    chan string
-	receiveMessages chan string
+
+
+//突然加上一个函数，不加就需要去掉for或者多设一个变量，
+func (c *Client) func_sendMessage(sid int,msg string){
+    str := fmt.Sprintf("###%d##%d##%s##%s###", sid, c.userID,c.userName,msg)
+    _,err := c.conn.Write([]byte(str))
+    checkError(err,"func_sendMessage")
 }
 
-func (c *Client) func_sendMessage(sid int, msg string) {
-	str := fmt.Sprintf("###%d##%d##%s##%s###", sid, c.userID, c.userName, msg)
-	_, err := c.conn.Write([]byte(str))
-	checkError(err, "func send message")
-}
-
+//send
 func (c *Client) sendMessage() {
-	for c.gkey {
-		msg := <-c.sendMessages
-		str := fmt.Sprintf("###2##%d##%s##%s###", c.userID, c.userName, msg)
-		_, err := c.conn.Write([]byte(str))
-		checkError(err, "send message")
-	}
+    for c.gkey {
+        msg := <- c.sendMessages
+        //str := fmt.Sprintf("(%s) \n %s: %s", nowTime(), c.userName,msg)
+        str := fmt.Sprintf("###2##%d##%s##%s###", c.userID,c.userName,msg)
+        _,err := c.conn.Write([]byte(str))
+        checkError(err,"sendMessage")
+    }
+
 }
 
+//接收
 func (c *Client) receiveMessage() {
-	var buf [512]byte
-	for c.gkey {
-		n, err := c.conn.Read(buf[0:])
-		checkError(err, "receive message")
-		c.receiveMessages <- string(buf[0:n])
-	}
+    var buf [512]byte
+    for c.gkey {
+        n,err := c.conn.Read(buf[0:])
+        checkError(err, "receiveMessage")
+        c.receiveMessages <- string(buf[0:n])
+    }
+    
 }
-
-func (c *Client) getMessages() {
-	var msg string
-	for c.gkey {
-		fmt.Println("msg: ")
-		_, err := fmt.Scanln(&msg)
-		checkError(err, "getMessage")
-		if msg == ":q" {
-			c.gkey = false
-		} else {
-			c.sendMessages <- encodeMessage(msg)
-		}
-	}
+//获得输入并处理之，这里有Println
+func (c *Client) getMessage() {
+    var msg string
+    for c.gkey {
+        fmt.Println("msg: ")
+        _,err := fmt.Scanln(&msg)
+        checkError(err, "getMessage")
+        if msg == ":quit" {
+            c.gkey = false
+        }else{
+            c.sendMessages <- encodeMessage(msg)
+        }
+    }
 }
-
+//打印，这里有Println
 func (c *Client) printMessage() {
-	for c.gkey {
-		msg := c.receiveMessages
-		fmt.Println(msg)
-	}
+    //var msg string
+    for c.gkey {
+        msg := <- c.receiveMessages
+        fmt.Println(msg)
+    }
 }
-
-func encodeMessage(msg string) string {
-	return strings.Join(strings.Split(strings.Join(strings.Split(msg, "\\"), "\\\\"), "#"), "\\#")
+//转换需要发送的字符串
+func encodeMessage(msg string) (string) {
+    return strings.Join(strings.Split(strings.Join(strings.Split(msg,"\\"),"\\\\"),"#"),"\\#")
+    
 }
-
 func nowTime() string {
-	return time.Now().String()
+    return time.Now().String()
+}
+func checkError(err error, funcName string){
+    if err != nil{
+        fmt.Fprintf(os.Stderr,"Fatal error:%s-----in func:%s",err.Error(), funcName)
+        os.Exit(1)
+    }
 }
 
 func main() {
@@ -104,13 +113,13 @@ func main() {
 
 	c.func_sendMessage(1, c.userName+" has entered the chatroom")
 
-	go c.printMessages()
+	go c.printMessage()
 	go c.receiveMessage()
 
 	go c.sendMessage()
 	c.getMessage()
 
-	c.func_sendMessages(3, c.userName+" has left the chatroom")
+	c.func_sendMessage(3, c.userName+" has left the chatroom")
 	fmt.Println("Left chatroom")
 
 	os.Exit(0)

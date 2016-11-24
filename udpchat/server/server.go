@@ -54,10 +54,10 @@ func (s *Server) handleMessage() {
 		s.clients[c.userID] = c //添加用户
 		s.messages <- msg
 		fmt.Println("3")
-		//用户发送消息
+	//用户发送消息
 	case 2:
 		s.messages <- msg
-		//client发来的退出消息
+	//client发来的退出消息
 	case 3:
 		delete(s.clients, m.userID)
 		s.messages <- msg
