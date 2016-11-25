@@ -9,21 +9,21 @@ import (
 	"time"
 )
 
-const (
-	port string = ":1200"
-)
-
+//Server is one of two servers
 type Server struct {
 	conn     *net.UDPConn //
 	messages chan string  //接受到的消息
 	clients  map[int]Client
 }
 
+// Client are users
 type Client struct {
 	userID   int
 	userName string
 	userAddr *net.UDPAddr
 }
+
+// Message passed by users
 type Message struct {
 	status   int
 	userID   int
@@ -34,15 +34,14 @@ type Message struct {
 func (s *Server) handleMessage() {
 	var buf [512]byte
 
-	fmt.Println("1\n")
 	n, addr, err := s.conn.ReadFromUDP(buf[0:])
 	if err != nil {
 		return
 	}
-	fmt.Println("2\n")
+
 	//分析消息
 	msg := string(buf[0:n])
-	fmt.Println(msg)
+	//fmt.Println(msg)
 	m := s.analyzeMessage(msg)
 	switch m.status {
 	//进入聊天室消息
@@ -52,8 +51,7 @@ func (s *Server) handleMessage() {
 		c.userID = m.userID
 		c.userName = m.userName
 		s.clients[c.userID] = c //添加用户
-		s.messages <- msg
-		fmt.Println("3")
+		s.messages <- fmt.Sprintln("REGISTERED with server", s.conn.LocalAddr())
 	//用户发送消息
 	case 2:
 		s.messages <- msg
@@ -61,8 +59,11 @@ func (s *Server) handleMessage() {
 	case 3:
 		delete(s.clients, m.userID)
 		s.messages <- msg
+	case 4:
+		sendstr := "REGISTER-DENIED server is full"
+		s.conn.WriteToUDP([]byte(sendstr), addr)
 	default:
-		fmt.Println("未识别消息", msg)
+		fmt.Println("Unrecognized", msg)
 	}
 
 	//fmt.Println(n,addr,string(buf[0:n]))
@@ -71,18 +72,23 @@ func (s *Server) handleMessage() {
 
 //这里还要判断一下数组的长度，
 func (s *Server) analyzeMessage(msg string) (m Message) {
-	//var m Message
-	s1 := strings.Split(msg, "###")
 
-	s2 := strings.Split(s1[1], "##")
-	//fmt.Println(s2)
+	s2 := strings.Split(msg, "##")
+
 	switch s2[0] {
 	case "1":
+		// MAKE SURE MAX 5
+		fmt.Println("How many clients", len(s.clients))
+		if len(s.clients) == 5 {
+			m.status = 4
+			m.userID, _ = strconv.Atoi(s2[1])
+			m.userName = s2[2]
+			return
+		}
 		m.status, _ = strconv.Atoi(s2[0])
-		fmt.Println("44")
 		m.userID, _ = strconv.Atoi(s2[1])
 		m.userName = s2[2]
-		fmt.Println(m)
+		//fmt.Println(m)
 		return
 	case "2":
 		m.status, _ = strconv.Atoi(s2[0])
@@ -94,10 +100,9 @@ func (s *Server) analyzeMessage(msg string) (m Message) {
 		m.userID, _ = strconv.Atoi(s2[1])
 		return
 	default:
-		fmt.Println("未识别消息", msg)
+		fmt.Println("Unrecognized", msg)
 		return
 	}
-	return
 }
 func (s *Server) sendMessage() {
 	for {
@@ -106,12 +111,11 @@ func (s *Server) sendMessage() {
 		sendstr := msg + daytime
 		fmt.Println(00, sendstr)
 		for _, c := range s.clients {
-			fmt.Println(c)
+			//fmt.Println(c)
 			n, err := s.conn.WriteToUDP([]byte(sendstr), c.userAddr)
 			fmt.Println(n, err)
 		}
 	}
-
 }
 
 func checkError(err error) {
@@ -122,19 +126,22 @@ func checkError(err error) {
 }
 
 func main() {
-	udpAddr, err := net.ResolveUDPAddr("udp4", port)
+	if len(os.Args) != 2 {
+		os.Exit(0)
+	}
+	udpAddr, err := net.ResolveUDPAddr("udp4", ":"+os.Args[1])
 	checkError(err)
 
-	var s Server
-	s.messages = make(chan string, 20)
-	s.clients = make(map[int]Client, 0)
+	var s1 Server
+	s1.messages = make(chan string, 20)
+	s1.clients = make(map[int]Client, 0)
 
-	s.conn, err = net.ListenUDP("udp", udpAddr)
+	s1.conn, err = net.ListenUDP("udp", udpAddr)
 	checkError(err)
 
-	go s.sendMessage()
+	go s1.sendMessage()
 
 	for {
-		s.handleMessage()
+		s1.handleMessage()
 	}
 }
