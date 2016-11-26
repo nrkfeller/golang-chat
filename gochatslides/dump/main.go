@@ -1,9 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"net"
+)
 
 func main() {
-	s := "REGISTER-DENIED"
-	fmt.Println(s[0:15])
+
+	udpAddr1, _ := net.ResolveUDPAddr("udp4", ":1203")
+	conn, _ := net.ListenUDP("udp", udpAddr1)
+
+	fmt.Println(conn.RemoteAddr())
 
 }
