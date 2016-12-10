@@ -1,0 +1,29 @@
+REGISTERED|2|sadfsa with serverREGISTERED|2|megan with serverREGISTERED|2|jimno with serverREGISTERED|2|sadfsd with serverREGISTERED|2|polo with serverPUBLISHED|6|polo|127.0.0.1:1201|true|asfd fgds REFER|13|nextserverREGISTERED|2|nick with server
+REGISTERED|2|adam with server
+REGISTERED|2|will with server
+REGISTERED|2|paul with server
+REGISTERED|2|jin with server
+PUBLISHED|6|paul|127.0.0.1:1200|true|nick adam 
+REGISTERED|2|james with server
+REGISTERED|2|dsaf with server
+EXIT|21|dsaf|left the channel
+REGISTERED|2|safdas with server
+REGISTERED|2|paol with server
+EXIT|21|paol|left the channel
+REGISTERED|2|paol with server
+PUBLISHED|6|paol|127.0.0.1:1200|true|sdf gfdg 
+REFER|13|nextserver
+REGISTERED|2|nick with server
+PUBLISHED|6|nick|127.0.0.1:1200|true|adam james 
+REGISTERED|2|adam with server
+PUBLISHED|6|adam|127.0.0.1:1200|true|nick james 
+REGISTERED|2|nick with server
+REGISTERED|2|adam with server
+PUBLISHED|6|adam|127.0.0.1:1200|true|nick james 
+PUBLISHED|6|nick|127.0.0.1:1200|true|adam tom 
+REGISTERED|2|nick with server
+PUBLISHED|6|nick|127.0.0.1:1200|true|adam james 
+REGISTERED|2|adam with server
+PUBLISHED|6|adam|127.0.0.1:1200|true|paul nick 
+REGISTERED|2|nick with server
+PUBLISHED|6|nick|172.30.78.9:1200|true|james tom 

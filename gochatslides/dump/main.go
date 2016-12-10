@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	"net"
+	"strings"
 )
 
 func main() {
 
-	udpAddr1, _ := net.ResolveUDPAddr("udp4", ":1203")
-	conn, _ := net.ListenUDP("udp", udpAddr1)
-
-	fmt.Println(conn.RemoteAddr())
+	s := "hello potato tomate "
+	ss := strings.Split(s, " ")
+	fmt.Println(ss, len(ss)-1)
+	ss = ss[:len(ss)-1]
+	fmt.Println(ss, len(ss)-1)
 
 }
